@@ -1,7 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 
-const DATA_DIR = path.join(process.cwd(), '.data');
+// Vercel's serverless runtime only allows writes under the OS temp dir (the deployment
+// bundle itself is read-only) — this keeps Phase 1 demoable there while Supabase is wired
+// in. Data resets on cold start on Vercel; locally it still persists in ./.data.
+const DATA_DIR = process.env.VERCEL ? path.join(os.tmpdir(), 'qtouf-data') : path.join(process.cwd(), '.data');
 
 function ensureDataDir(): void {
   if (!fs.existsSync(DATA_DIR)) {
