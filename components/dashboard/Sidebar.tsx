@@ -24,6 +24,7 @@ export function Sidebar({ locale, role }: { locale: Locale; role: Role }) {
     { href: `${base}/orders`, labelEn: 'Orders', labelAr: 'الطلبات', visible: can(role, 'view_all_orders') },
     { href: `${base}/inventory`, labelEn: 'Inventory', labelAr: 'المخزون', visible: can(role, 'adjust_inventory') },
     { href: `${base}/customers`, labelEn: 'Customers', labelAr: 'العملاء', visible: can(role, 'view_reports') },
+    { href: `${base}/invoices`, labelEn: 'Invoices', labelAr: 'الفواتير', visible: can(role, 'view_reports') },
     { href: `${base}/reports`, labelEn: 'Reports', labelAr: 'التقارير', visible: can(role, 'view_reports') },
     {
       href: `${base}/settings`,

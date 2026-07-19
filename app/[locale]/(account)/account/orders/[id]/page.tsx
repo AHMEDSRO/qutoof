@@ -22,7 +22,17 @@ export default async function OrderDetailPage({ params }: { params: { locale: st
         <h1 className="font-display text-2xl tracking-wide text-ink">{order.orderNumber}</h1>
         <Badge variant="primary">{ORDER_STATUS_LABELS[order.status][locale]}</Badge>
       </div>
-      <p className="mt-1 text-sm text-ink-muted">{new Date(order.createdAt).toLocaleString(locale)}</p>
+      <div className="mt-1 flex items-center justify-between">
+        <p className="text-sm text-ink-muted">{new Date(order.createdAt).toLocaleString(locale)}</p>
+        <a
+          href={`/api/orders/${order.id}/invoice`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm font-semibold text-primary hover:underline"
+        >
+          {locale === 'en' ? 'Download invoice' : 'تحميل الفاتورة'}
+        </a>
+      </div>
 
       <div className="mt-6 rounded-card border border-border bg-surface p-4">
         {order.items.map((item) => (

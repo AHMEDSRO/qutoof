@@ -30,7 +30,17 @@ export default async function DashboardOrderDetailPage({ params }: { params: { l
     <div className="max-w-2xl space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="font-display text-xl tracking-wide text-ink">{order.orderNumber}</h2>
-        <Badge variant="primary">{ORDER_STATUS_LABELS[order.status][locale]}</Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant="primary">{ORDER_STATUS_LABELS[order.status][locale]}</Badge>
+          <a
+            href={`/api/orders/${order.id}/invoice`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-semibold text-primary hover:underline"
+          >
+            {locale === 'en' ? 'Download invoice' : 'تحميل الفاتورة'}
+          </a>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 text-sm">
