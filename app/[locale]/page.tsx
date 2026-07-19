@@ -16,7 +16,8 @@ export default async function HomePage({ params }: { params: { locale: string } 
   const ctx = await getRequestContext();
   const showWholesale = can(ctx.role, 'view_wholesale_pricing');
 
-  const featured = (await productRepository.list(ctx)).slice(0, 4);
+  const products = await productRepository.list(ctx);
+  const featured = products.slice(0, 3);
 
   return (
     <>
@@ -48,7 +49,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
 
           <div className="relative hidden lg:block">
             <div className="flex flex-col items-end gap-4">
-              {featured.slice(0, 3).map((product, i) => (
+              {featured.map((product, i) => (
                 <div
                   key={product.id}
                   className="w-56 rotate-2 rounded-card border border-tag-border bg-tag p-3 shadow-lg"
@@ -72,7 +73,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
         </h2>
         <div className="mt-6">
           <ProductGrid
-            products={featured}
+            products={products}
             locale={locale}
             showWholesale={showWholesale}
             emptyMessage={locale === 'en' ? 'No products yet.' : 'لا يوجد منتجات بعد.'}
