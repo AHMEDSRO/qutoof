@@ -3,7 +3,6 @@ import { isLocale, type Locale } from '@/lib/i18n/config';
 import { notFound } from 'next/navigation';
 import { orderRepository, userRepository } from '@/lib/data';
 import { getRequestContext } from '@/lib/auth/session';
-import { can } from '@/lib/rbac/permissions';
 import { ORDER_STATUS_LABELS } from '@/lib/types/order';
 import { formatMoney } from '@/lib/format';
 import { DataTable } from '@/components/dashboard/DataTable';
@@ -18,7 +17,7 @@ export default async function DashboardOrdersPage({ params }: { params: { locale
 
   const orders = await orderRepository.list(ctx);
   const sorted = [...orders].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  const users = can(ctx.role, 'manage_users') ? await userRepository.list(ctx) : [];
+  const users = await userRepository.list(ctx).catch(() => []);
 
   return (
     <div className="space-y-4">

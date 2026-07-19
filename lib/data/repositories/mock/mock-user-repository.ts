@@ -2,6 +2,7 @@ import { readCollection, writeCollection } from '@/lib/data/store';
 import { seedUsers } from '@/lib/data/mock/users';
 import type { UserProfile } from '@/lib/types/user';
 import { assertCan } from '@/lib/rbac/permissions';
+import { isStaffRole } from '@/lib/rbac/roles';
 import type { UserRepository } from '../user-repository';
 
 function loadAll(): UserProfile[] {
@@ -10,7 +11,7 @@ function loadAll(): UserProfile[] {
 
 export const mockUserRepository: UserRepository = {
   async list(ctx) {
-    assertCan(ctx.role, 'manage_users');
+    if (!isStaffRole(ctx.role)) throw new Error('Role lacks permission to list users');
     return loadAll();
   },
 

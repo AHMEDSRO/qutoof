@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase/admin-client';
 import type { UserProfile, Address, NewUserProfile, UserProfilePatch } from '@/lib/types/user';
 import type { Role } from '@/lib/rbac/roles';
+import { isStaffRole } from '@/lib/rbac/roles';
 import type { Locale } from '@/lib/types/common';
 import type { CreditLimit } from '@/lib/types/receivable';
 import { assertCan } from '@/lib/rbac/permissions';
@@ -71,7 +72,10 @@ function fromUser(user: NewUserProfile | UserProfilePatch) {
 
 export const supabaseUserRepository: UserRepository = {
   async list(ctx) {
-    assertCan(ctx.role, 'manage_users');
+    // Reading the customer/staff directory is a normal part of every staff role's job
+    // (looking up a customer, picking a sales rep) — 'manage_users' gates *editing*
+    // roles/creating staff accounts, not this read.
+    if (!isStaffRole(ctx.role)) throw new Error('Role lacks permission to list users');
     const { data, error } = await supabaseAdmin.from('users').select('*');
     if (error) throw error;
     return (data as UserRow[]).map(toUser);

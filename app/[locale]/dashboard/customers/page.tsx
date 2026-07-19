@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { isLocale, type Locale } from '@/lib/i18n/config';
 import { notFound } from 'next/navigation';
 import { userRepository } from '@/lib/data';
@@ -6,9 +7,10 @@ import { requirePermission } from '@/lib/rbac/guard';
 import { formatMoney } from '@/lib/format';
 import { updateCreditLimitAction } from '@/lib/dashboard/customer-actions';
 import { DataTable } from '@/components/dashboard/DataTable';
+import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import type { WholesaleProfile } from '@/lib/types/user';
+import type { RetailProfile, WholesaleProfile } from '@/lib/types/user';
 
 export default async function CustomersPage({ params }: { params: { locale: string } }) {
   if (!isLocale(params.locale)) notFound();
@@ -18,31 +20,44 @@ export default async function CustomersPage({ params }: { params: { locale: stri
   const canEditCreditLimit = ctx.role === 'super_admin';
 
   const users = await userRepository.list(ctx);
-  const wholesaleCustomers = users.filter((u): u is WholesaleProfile => u.role === 'wholesale_customer');
+  const customers = users.filter(
+    (u): u is RetailProfile | WholesaleProfile => u.role === 'retail_customer' || u.role === 'wholesale_customer'
+  );
+  const sorted = [...customers].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
   return (
     <div className="space-y-4">
-      <h2 className="font-display text-xl tracking-wide text-ink">{locale === 'en' ? 'Wholesale customers' : 'عملاء الجملة'}</h2>
+      <h2 className="font-display text-xl tracking-wide text-ink">{locale === 'en' ? 'Customers' : 'العملاء'}</h2>
 
       <DataTable
         rowKey={(c) => c.id}
-        emptyMessage={locale === 'en' ? 'No wholesale customers yet.' : 'لا يوجد عملاء جملة بعد.'}
-        rows={wholesaleCustomers}
+        emptyMessage={locale === 'en' ? 'No customers yet.' : 'لا يوجد عملاء بعد.'}
+        rows={sorted}
         columns={[
           {
-            header: locale === 'en' ? 'Business' : 'المنشأة',
+            header: locale === 'en' ? 'Customer' : 'العميل',
             render: (c) => (
-              <div>
-                <p className="font-semibold text-ink">{c.businessName}</p>
-                <p className="text-xs text-ink-muted">{c.fullName}</p>
-              </div>
+              <Link href={`/${locale}/dashboard/customers/${c.id}`} className="block hover:underline">
+                <p className="font-semibold text-ink">{c.role === 'wholesale_customer' ? c.businessName : c.fullName}</p>
+                {c.role === 'wholesale_customer' && <p className="text-xs text-ink-muted">{c.fullName}</p>}
+              </Link>
+            ),
+          },
+          {
+            header: locale === 'en' ? 'Type' : 'النوع',
+            render: (c) => (
+              <Badge variant={c.role === 'wholesale_customer' ? 'accent' : 'primary'}>
+                {c.role === 'wholesale_customer' ? (locale === 'en' ? 'Wholesale' : 'جملة') : locale === 'en' ? 'Retail' : 'قطاعي'}
+              </Badge>
             ),
           },
           { header: locale === 'en' ? 'Email' : 'الإيميل', render: (c) => c.email },
+          { header: locale === 'en' ? 'Phone' : 'الهاتف', render: (c) => c.phone ?? '—' },
           {
             header: locale === 'en' ? 'Credit limit' : 'حد الائتمان',
-            render: (c) =>
-              canEditCreditLimit ? (
+            render: (c) => {
+              if (c.role !== 'wholesale_customer') return '—';
+              return canEditCreditLimit ? (
                 <form action={updateCreditLimitAction.bind(null, locale, c.id)} className="flex items-center gap-2">
                   <Input name="limit" type="number" min={0} step="100" defaultValue={c.creditLimit.limit} className="w-28" />
                   <Button type="submit" size="sm" variant="outline">
@@ -51,15 +66,12 @@ export default async function CustomersPage({ params }: { params: { locale: stri
                 </form>
               ) : (
                 <span className="font-mono">{formatMoney(c.creditLimit.limit, locale)}</span>
-              ),
+              );
+            },
           },
           {
             header: locale === 'en' ? 'Balance due' : 'المستحق',
-            render: (c) => <span className="font-mono">{formatMoney(c.creditLimit.currentBalance, locale)}</span>,
-          },
-          {
-            header: locale === 'en' ? 'Available' : 'المتاح',
-            render: (c) => <span className="font-mono">{formatMoney(c.creditLimit.availableCredit, locale)}</span>,
+            render: (c) => (c.role === 'wholesale_customer' ? <span className="font-mono">{formatMoney(c.creditLimit.currentBalance, locale)}</span> : '—'),
           },
         ]}
       />
