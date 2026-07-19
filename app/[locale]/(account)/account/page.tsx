@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { isLocale, type Locale } from '@/lib/i18n/config';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth/session';
-import { ROLE_LABELS } from '@/lib/rbac/roles';
+import { ROLE_LABELS, isStaffRole } from '@/lib/rbac/roles';
 import { EMIRATE_LABELS } from '@/lib/types/common';
 import { formatMoney } from '@/lib/format';
 import { buttonVariants } from '@/components/ui/Button';
@@ -13,6 +13,11 @@ export default async function AccountPage({ params }: { params: { locale: string
   if (!isLocale(params.locale)) notFound();
   const locale = params.locale as Locale;
   const user = await getCurrentUser();
+
+  // Staff never see the customer profile page — every staff role lands on the dashboard instead.
+  if (user && isStaffRole(user.role)) {
+    redirect(`/${locale}/dashboard`);
+  }
 
   if (!user) {
     return (
