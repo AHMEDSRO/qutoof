@@ -3,7 +3,6 @@ import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { notFound } from 'next/navigation';
 import { productRepository } from '@/lib/data';
 import { getRequestContext } from '@/lib/auth/session';
-import { can } from '@/lib/rbac/permissions';
 import { ProductGrid } from '@/components/storefront/ProductGrid';
 import { buttonVariants } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
@@ -14,9 +13,8 @@ export default async function HomePage({ params }: { params: { locale: string } 
   const locale = params.locale as Locale;
   const dict = await getDictionary(locale);
   const ctx = await getRequestContext();
-  const showWholesale = can(ctx.role, 'view_wholesale_pricing');
 
-  const products = await productRepository.list(ctx);
+  const products = await productRepository.list(ctx, { listingType: 'retail' });
   const featured = products.slice(0, 3);
 
   return (
@@ -75,7 +73,6 @@ export default async function HomePage({ params }: { params: { locale: string } 
           <ProductGrid
             products={products}
             locale={locale}
-            showWholesale={showWholesale}
             emptyMessage={locale === 'en' ? 'No products yet.' : 'لا يوجد منتجات بعد.'}
           />
         </div>

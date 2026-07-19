@@ -16,7 +16,7 @@ export function productJsonLd(product: Product | PublicProduct, locale: Locale) 
       '@type': 'Offer',
       url: `${APP_URL}/${locale}/product/${product.slug}`,
       priceCurrency: 'AED',
-      price: product.retailPrice,
+      price: product.price,
       availability:
         product.quantityInStock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
     },

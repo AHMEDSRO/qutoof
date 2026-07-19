@@ -17,17 +17,17 @@ function totals(items: OrderLineItem[], deliveryFee: number): OrderTotals {
 
 export function seedOrders(): Order[] {
   const order1Items: OrderLineItem[] = [
-    { productId: 'tomato', nameSnapshot: { en: 'Tomato', ar: 'طماطم' }, unitPriceSnapshot: 6, quantity: 5, lineTotal: 30 },
-    { productId: 'cucumber', nameSnapshot: { en: 'Cucumber', ar: 'خيار' }, unitPriceSnapshot: 5, quantity: 3, lineTotal: 15 },
+    { productId: 'tomato-retail', nameSnapshot: { en: 'Tomato', ar: 'طماطم' }, unitPriceSnapshot: 6, quantity: 5, lineTotal: 30 },
+    { productId: 'cucumber-retail', nameSnapshot: { en: 'Cucumber', ar: 'خيار' }, unitPriceSnapshot: 5, quantity: 3, lineTotal: 15 },
   ];
 
   const order2Items: OrderLineItem[] = [
-    { productId: 'orange', nameSnapshot: { en: 'Orange', ar: 'برتقال' }, unitPriceSnapshot: 4, quantity: 50, lineTotal: 200 },
-    { productId: 'potato', nameSnapshot: { en: 'Potato', ar: 'بطاطس' }, unitPriceSnapshot: 2.7, quantity: 100, lineTotal: 270 },
+    { productId: 'orange-wholesale', nameSnapshot: { en: 'Orange', ar: 'برتقال' }, unitPriceSnapshot: 4, quantity: 50, lineTotal: 200 },
+    { productId: 'potato-wholesale', nameSnapshot: { en: 'Potato', ar: 'بطاطس' }, unitPriceSnapshot: 2.7, quantity: 100, lineTotal: 270 },
   ];
 
   const order3Items: OrderLineItem[] = [
-    { productId: 'mango', nameSnapshot: { en: 'Mango', ar: 'مانجو' }, unitPriceSnapshot: 11, quantity: 4, lineTotal: 44 },
+    { productId: 'mango-retail', nameSnapshot: { en: 'Mango', ar: 'مانجو' }, unitPriceSnapshot: 11, quantity: 4, lineTotal: 44 },
   ];
 
   return [

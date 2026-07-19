@@ -7,11 +7,9 @@ import { PriceTag } from './PriceTag';
 export function ProductCard({
   product,
   locale,
-  showWholesale,
 }: {
   product: Product | PublicProduct;
   locale: Locale;
-  showWholesale: boolean;
 }) {
   const outOfStock = product.quantityInStock <= 0;
 
@@ -47,13 +45,7 @@ export function ProductCard({
       <h3 className="mt-3 line-clamp-1 font-semibold text-ink">{product.name[locale]}</h3>
       <p className="text-xs text-ink-muted">{product.sizeWeight}</p>
       <div className="mt-2">
-        <PriceTag
-          locale={locale}
-          retailPrice={product.retailPrice}
-          wholesalePrice={product.wholesalePrice}
-          unit={product.unit}
-          showWholesale={showWholesale}
-        />
+        <PriceTag locale={locale} price={product.price} unit={product.unit} />
       </div>
     </Link>
   );

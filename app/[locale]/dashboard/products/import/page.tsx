@@ -73,8 +73,8 @@ export default function ImportProductsPage({ params }: { params: { locale: Local
 
       <Card className="p-4 text-sm text-ink-muted">
         {locale === 'en'
-          ? 'Columns: Name (EN), Name (AR), Category Slug, Country of Origin, Size/Weight, Unit, Retail Price, Wholesale Price, Quantity, Image URL. Rows with errors are skipped — the rest import normally.'
-          : 'الأعمدة: Name (EN)، Name (AR)، Category Slug، Country of Origin، Size/Weight، Unit، Retail Price، Wholesale Price، Quantity، Image URL. الصفوف اللي فيها أخطاء بتتجاهل، والباقي بيتستورد عادي.'}
+          ? 'Columns: Name (EN), Name (AR), Category Slug, Country of Origin, Size/Weight, Unit, Listing Type, Price, Quantity, Image URL. Rows with errors are skipped — the rest import normally.'
+          : 'الأعمدة: Name (EN)، Name (AR)، Category Slug، Country of Origin، Size/Weight، Unit، Listing Type، Price، Quantity، Image URL. الصفوف اللي فيها أخطاء بتتجاهل، والباقي بيتستورد عادي.'}
       </Card>
 
       <div>
@@ -114,7 +114,7 @@ export default function ImportProductsPage({ params }: { params: { locale: Local
                   <tr>
                     <th className="px-3 py-2 text-start">{locale === 'en' ? 'Name' : 'الاسم'}</th>
                     <th className="px-3 py-2 text-start">{locale === 'en' ? 'Origin' : 'المنشأ'}</th>
-                    <th className="px-3 py-2 text-start">{locale === 'en' ? 'Retail' : 'القطاعي'}</th>
+                    <th className="px-3 py-2 text-start">{locale === 'en' ? 'Price' : 'السعر'}</th>
                     <th className="px-3 py-2 text-start">{locale === 'en' ? 'Qty' : 'الكمية'}</th>
                   </tr>
                 </thead>
@@ -123,7 +123,7 @@ export default function ImportProductsPage({ params }: { params: { locale: Local
                     <tr key={i} className="border-t border-border">
                       <td className="px-3 py-2 text-ink">{row.name[locale]}</td>
                       <td className="px-3 py-2 text-ink">{row.countryOfOrigin}</td>
-                      <td className="px-3 py-2 font-mono text-ink">{row.retailPrice}</td>
+                      <td className="px-3 py-2 font-mono text-ink">{row.price}</td>
                       <td className="px-3 py-2 font-mono text-ink">{row.quantityInStock}</td>
                     </tr>
                   ))}

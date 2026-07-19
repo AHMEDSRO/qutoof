@@ -10,15 +10,11 @@ function loadAll(): Product[] {
 }
 
 function sanitize(ctx: RequestContext, product: Product): Product | PublicProduct {
-  const visible: Product = { ...product };
-  if (!can(ctx.role, 'view_wholesale_pricing')) {
-    visible.wholesalePrice = null;
-  }
   if (!can(ctx.role, 'view_cost_price')) {
-    const { costPrice: _costPrice, ...rest } = visible;
+    const { costPrice: _costPrice, ...rest } = product;
     return rest;
   }
-  return visible;
+  return product;
 }
 
 function applyFilters(products: Product[], filters?: ProductFilters): Product[] {
@@ -26,9 +22,9 @@ function applyFilters(products: Product[], filters?: ProductFilters): Product[] 
   return products.filter((p) => {
     if (filters.categoryId && p.categoryId !== filters.categoryId) return false;
     if (filters.countryOfOrigin && p.countryOfOrigin !== filters.countryOfOrigin) return false;
-    if (filters.minPrice !== undefined && p.retailPrice < filters.minPrice) return false;
-    if (filters.maxPrice !== undefined && p.retailPrice > filters.maxPrice) return false;
-    if (filters.wholesaleOnly && !p.isWholesaleAvailable) return false;
+    if (filters.minPrice !== undefined && p.price < filters.minPrice) return false;
+    if (filters.maxPrice !== undefined && p.price > filters.maxPrice) return false;
+    if (filters.listingType && p.listingType !== filters.listingType) return false;
     if (filters.search) {
       const q = filters.search.toLowerCase();
       const matches =
@@ -44,7 +40,7 @@ function applyFilters(products: Product[], filters?: ProductFilters): Product[] 
 export const mockProductRepository: ProductRepository = {
   async list(ctx, filters) {
     const products = applyFilters(
-      loadAll().filter((p) => p.isActive),
+      loadAll().filter((p) => filters?.includeInactive || p.isActive),
       filters
     );
     return products.map((p) => sanitize(ctx, p));
@@ -87,6 +83,12 @@ export const mockProductRepository: ProductRepository = {
     products[index] = updated;
     writeCollection('products', products);
     return updated;
+  },
+
+  async delete(ctx, id) {
+    assertCan(ctx.role, 'edit_products');
+    const products = loadAll();
+    writeCollection('products', products.filter((p) => p.id !== id));
   },
 
   async bulkImport(ctx, items) {

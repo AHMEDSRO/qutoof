@@ -1,4 +1,4 @@
-import type { Product } from '@/lib/types/product';
+import type { Product, ListingType } from '@/lib/types/product';
 
 const now = new Date().toISOString();
 
@@ -14,6 +14,7 @@ interface Seed {
   unit: Product['unit'];
   costPrice: number;
   retailPrice: number;
+  /** null means this item is retail-only — no wholesale listing is generated for it. */
   wholesalePrice: number | null;
   quantityInStock: number;
   imageUrl: string;
@@ -160,7 +161,7 @@ const seeds: Seed[] = [
     unit: 'kg',
     costPrice: 2.6,
     retailPrice: 5,
-    wholesalePrice: 3.4,
+    wholesalePrice: null,
     quantityInStock: 90,
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/52/Beetroots_in_a_basket.jpg',
   },
@@ -240,7 +241,7 @@ const seeds: Seed[] = [
     unit: 'kg',
     costPrice: 4.5,
     retailPrice: 8.5,
-    wholesalePrice: 6,
+    wholesalePrice: null,
     quantityInStock: 80,
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/d/d0/Citrus_paradisi_%28Grapefruit%2C_pink%29_white_bg.jpg',
   },
@@ -288,7 +289,7 @@ const seeds: Seed[] = [
     unit: 'piece',
     costPrice: 8,
     retailPrice: 15,
-    wholesalePrice: 11,
+    wholesalePrice: null,
     quantityInStock: 60,
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/5c/Pineapple_fruit_2.jpg',
   },
@@ -320,7 +321,7 @@ const seeds: Seed[] = [
     unit: 'box',
     costPrice: 9,
     retailPrice: 16,
-    wholesalePrice: 12,
+    wholesalePrice: null,
     quantityInStock: 8,
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Blueberries-In-Pack.jpg',
   },
@@ -342,25 +343,46 @@ const seeds: Seed[] = [
   },
 ];
 
+/** Each seed becomes a retail listing, plus a separate wholesale listing when a wholesalePrice is set — matching the real workflow where the same item is added twice to sell it both ways. */
 export function seedProducts(): Product[] {
-  return seeds.map((s) => ({
-    id: s.slug,
-    slug: s.slug,
-    name: { en: s.nameEn, ar: s.nameAr },
-    description: { en: s.descriptionEn, ar: s.descriptionAr },
-    categoryId: s.categoryId,
-    countryOfOrigin: s.countryOfOrigin,
-    sizeWeight: s.sizeWeight,
-    unit: s.unit,
-    images: [{ url: s.imageUrl, altEn: s.nameEn, altAr: s.nameAr }],
-    costPrice: s.costPrice,
-    retailPrice: s.retailPrice,
-    wholesalePrice: s.wholesalePrice,
-    quantityInStock: s.quantityInStock,
-    lowStockThreshold: 20,
-    isWholesaleAvailable: s.wholesalePrice !== null,
-    isActive: true,
-    createdAt: now,
-    updatedAt: now,
-  }));
+  const products: Product[] = [];
+
+  for (const s of seeds) {
+    const base = {
+      name: { en: s.nameEn, ar: s.nameAr },
+      description: { en: s.descriptionEn, ar: s.descriptionAr },
+      categoryId: s.categoryId,
+      countryOfOrigin: s.countryOfOrigin,
+      sizeWeight: s.sizeWeight,
+      unit: s.unit,
+      images: [{ url: s.imageUrl, altEn: s.nameEn, altAr: s.nameAr }],
+      costPrice: s.costPrice,
+      lowStockThreshold: 20,
+      isActive: true,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    products.push({
+      ...base,
+      id: `${s.slug}-retail`,
+      slug: `${s.slug}-retail`,
+      listingType: 'retail' as ListingType,
+      price: s.retailPrice,
+      quantityInStock: s.quantityInStock,
+    });
+
+    if (s.wholesalePrice !== null) {
+      products.push({
+        ...base,
+        id: `${s.slug}-wholesale`,
+        slug: `${s.slug}-wholesale`,
+        listingType: 'wholesale' as ListingType,
+        price: s.wholesalePrice,
+        quantityInStock: Math.round(s.quantityInStock * 1.5),
+      });
+    }
+  }
+
+  return products;
 }

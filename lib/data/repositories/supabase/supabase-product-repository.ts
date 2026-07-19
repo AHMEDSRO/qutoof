@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase/admin-client';
-import type { Product, PublicProduct, ProductImage, ProductUnit } from '@/lib/types/product';
+import type { Product, PublicProduct, ProductImage, ProductUnit, ListingType } from '@/lib/types/product';
 import type { RequestContext } from '@/lib/auth/auth-provider';
 import { assertCan, can } from '@/lib/rbac/permissions';
 import type { ProductRepository, ProductFilters } from '../product-repository';
@@ -15,13 +15,12 @@ interface ProductRow {
   country_of_origin: string;
   size_weight: string;
   unit: ProductUnit;
+  listing_type: ListingType;
   images: ProductImage[];
   cost_price: number;
-  retail_price: number;
-  wholesale_price: number | null;
+  price: number;
   quantity_in_stock: number;
   low_stock_threshold: number;
-  is_wholesale_available: boolean;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -37,13 +36,12 @@ function toProduct(row: ProductRow): Product {
     countryOfOrigin: row.country_of_origin,
     sizeWeight: row.size_weight,
     unit: row.unit,
+    listingType: row.listing_type,
     images: row.images,
     costPrice: row.cost_price,
-    retailPrice: row.retail_price,
-    wholesalePrice: row.wholesale_price,
+    price: row.price,
     quantityInStock: row.quantity_in_stock,
     lowStockThreshold: row.low_stock_threshold,
-    isWholesaleAvailable: row.is_wholesale_available,
     isActive: row.is_active,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -61,33 +59,28 @@ function fromProduct(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) {
     country_of_origin: product.countryOfOrigin,
     size_weight: product.sizeWeight,
     unit: product.unit,
+    listing_type: product.listingType,
     images: product.images,
     cost_price: product.costPrice,
-    retail_price: product.retailPrice,
-    wholesale_price: product.wholesalePrice,
+    price: product.price,
     quantity_in_stock: product.quantityInStock,
     low_stock_threshold: product.lowStockThreshold,
-    is_wholesale_available: product.isWholesaleAvailable,
     is_active: product.isActive,
   };
 }
 
 function sanitize(ctx: RequestContext, product: Product): Product | PublicProduct {
-  const visible: Product = { ...product };
-  if (!can(ctx.role, 'view_wholesale_pricing')) {
-    visible.wholesalePrice = null;
-  }
   if (!can(ctx.role, 'view_cost_price')) {
-    const { costPrice: _costPrice, ...rest } = visible;
+    const { costPrice: _costPrice, ...rest } = product;
     return rest;
   }
-  return visible;
+  return product;
 }
 
 function applyInMemoryFilters(products: Product[], filters?: ProductFilters): Product[] {
   if (!filters) return products;
   return products.filter((p) => {
-    if (filters.wholesaleOnly && !p.isWholesaleAvailable) return false;
+    if (filters.listingType && p.listingType !== filters.listingType) return false;
     if (filters.search) {
       const q = filters.search.toLowerCase();
       const matches = p.name.en.toLowerCase().includes(q) || p.name.ar.includes(filters.search) || p.slug.includes(q);
@@ -98,11 +91,12 @@ function applyInMemoryFilters(products: Product[], filters?: ProductFilters): Pr
 }
 
 async function fetchFiltered(filters?: ProductFilters): Promise<Product[]> {
-  let query = supabaseAdmin.from('products').select('*').eq('is_active', true);
+  let query = supabaseAdmin.from('products').select('*');
+  if (!filters?.includeInactive) query = query.eq('is_active', true);
   if (filters?.categoryId) query = query.eq('category_id', filters.categoryId);
   if (filters?.countryOfOrigin) query = query.eq('country_of_origin', filters.countryOfOrigin);
-  if (filters?.minPrice !== undefined) query = query.gte('retail_price', filters.minPrice);
-  if (filters?.maxPrice !== undefined) query = query.lte('retail_price', filters.maxPrice);
+  if (filters?.minPrice !== undefined) query = query.gte('price', filters.minPrice);
+  if (filters?.maxPrice !== undefined) query = query.lte('price', filters.maxPrice);
 
   const { data, error } = await query;
   if (error) throw error;
@@ -156,6 +150,12 @@ export const supabaseProductRepository: ProductRepository = {
       .single();
     if (error) throw error;
     return toProduct(data as ProductRow);
+  },
+
+  async delete(ctx, id) {
+    assertCan(ctx.role, 'edit_products');
+    const { error } = await supabaseAdmin.from('products').delete().eq('id', id);
+    if (error) throw error;
   },
 
   async bulkImport(ctx, items) {

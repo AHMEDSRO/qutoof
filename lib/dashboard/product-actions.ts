@@ -14,7 +14,7 @@ function slugify(value: string): string {
     .replace(/(^-|-$)/g, '');
 }
 
-const createProductSchema = z.object({
+const productSchema = z.object({
   nameEn: z.string().min(1),
   nameAr: z.string().min(1),
   descriptionEn: z.string().default(''),
@@ -23,39 +23,74 @@ const createProductSchema = z.object({
   countryOfOrigin: z.string().min(1),
   sizeWeight: z.string().min(1),
   unit: z.enum(['kg', 'g', 'piece', 'box', 'bunch']),
+  listingType: z.enum(['retail', 'wholesale']),
   imageUrl: z.string().url(),
   costPrice: z.coerce.number().min(0),
-  retailPrice: z.coerce.number().min(0),
-  wholesalePrice: z.coerce.number().min(0).optional(),
+  price: z.coerce.number().min(0),
   quantityInStock: z.coerce.number().min(0),
   lowStockThreshold: z.coerce.number().min(0),
 });
 
 export async function createProductAction(locale: string, formData: FormData) {
   const raw = Object.fromEntries(formData.entries());
-  const data = createProductSchema.parse(raw);
+  const data = productSchema.parse(raw);
   const ctx = await getRequestContext();
 
   await productRepository.create(ctx, {
-    slug: slugify(data.nameEn),
+    slug: slugify(`${data.nameEn}-${data.listingType}`),
     name: { en: data.nameEn, ar: data.nameAr },
     description: { en: data.descriptionEn, ar: data.descriptionAr },
     categoryId: data.categoryId,
     countryOfOrigin: data.countryOfOrigin,
     sizeWeight: data.sizeWeight,
     unit: data.unit,
+    listingType: data.listingType,
     images: [{ url: data.imageUrl, altEn: data.nameEn, altAr: data.nameAr }],
     costPrice: data.costPrice,
-    retailPrice: data.retailPrice,
-    wholesalePrice: data.wholesalePrice ?? null,
+    price: data.price,
     quantityInStock: data.quantityInStock,
     lowStockThreshold: data.lowStockThreshold,
-    isWholesaleAvailable: Boolean(data.wholesalePrice),
     isActive: true,
   });
 
   revalidatePath(`/${locale}/dashboard/products`);
   redirect(`/${locale}/dashboard/products`);
+}
+
+export async function updateProductAction(locale: string, productId: string, formData: FormData) {
+  const raw = Object.fromEntries(formData.entries());
+  const data = productSchema.parse(raw);
+  const ctx = await getRequestContext();
+
+  await productRepository.update(ctx, productId, {
+    name: { en: data.nameEn, ar: data.nameAr },
+    description: { en: data.descriptionEn, ar: data.descriptionAr },
+    categoryId: data.categoryId,
+    countryOfOrigin: data.countryOfOrigin,
+    sizeWeight: data.sizeWeight,
+    unit: data.unit,
+    listingType: data.listingType,
+    images: [{ url: data.imageUrl, altEn: data.nameEn, altAr: data.nameAr }],
+    costPrice: data.costPrice,
+    price: data.price,
+    quantityInStock: data.quantityInStock,
+    lowStockThreshold: data.lowStockThreshold,
+  });
+
+  revalidatePath(`/${locale}/dashboard/products`);
+  redirect(`/${locale}/dashboard/products`);
+}
+
+export async function deleteProductAction(locale: string, productId: string) {
+  const ctx = await getRequestContext();
+  await productRepository.delete(ctx, productId);
+  revalidatePath(`/${locale}/dashboard/products`);
+}
+
+export async function toggleProductActiveAction(locale: string, productId: string, nextIsActive: boolean) {
+  const ctx = await getRequestContext();
+  await productRepository.update(ctx, productId, { isActive: nextIsActive });
+  revalidatePath(`/${locale}/dashboard/products`);
 }
 
 export async function adjustStockAction(locale: string, productId: string, formData: FormData) {

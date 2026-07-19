@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { productRepository } from '@/lib/data';
 import { getRequestContext } from '@/lib/auth/session';
-import { can } from '@/lib/rbac/permissions';
 import { SearchBar } from '@/components/storefront/SearchBar';
 import { ProductGrid } from '@/components/storefront/ProductGrid';
 
@@ -18,10 +17,9 @@ export default async function SearchPage({
   const locale = params.locale as Locale;
   const dict = await getDictionary(locale);
   const ctx = await getRequestContext();
-  const showWholesale = can(ctx.role, 'view_wholesale_pricing');
   const query = searchParams.q ?? '';
 
-  const products = query ? await productRepository.list(ctx, { search: query }) : [];
+  const products = query ? await productRepository.list(ctx, { listingType: 'retail', search: query }) : [];
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
@@ -42,7 +40,6 @@ export default async function SearchPage({
         <ProductGrid
           products={products}
           locale={locale}
-          showWholesale={showWholesale}
           emptyMessage={locale === 'en' ? 'No results.' : 'مفيش نتايج.'}
         />
       </div>

@@ -14,7 +14,7 @@ export default async function WholesalePage({ params }: { params: { locale: stri
   const showWholesale = can(ctx.role, 'view_wholesale_pricing');
 
   const products = showWholesale
-    ? (await productRepository.list(ctx, { wholesaleOnly: true }))
+    ? (await productRepository.list(ctx, { listingType: 'wholesale' }))
     : [];
 
   return (
@@ -42,7 +42,6 @@ export default async function WholesalePage({ params }: { params: { locale: stri
           <ProductGrid
             products={products}
             locale={locale}
-            showWholesale
             emptyMessage={locale === 'en' ? 'No wholesale products yet.' : 'لا يوجد منتجات جملة بعد.'}
           />
         </div>

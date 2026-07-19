@@ -15,7 +15,7 @@ export default async function NewWholesaleOrderPage({ params }: { params: { loca
 
   const [users, products, regions] = await Promise.all([
     userRepository.list(ctx).catch(() => []),
-    productRepository.list(ctx),
+    productRepository.list(ctx, { listingType: 'wholesale' }),
     deliveryRepository.list(ctx),
   ]);
   const wholesaleCustomers = users.filter((u) => u.role === 'wholesale_customer');
@@ -83,7 +83,7 @@ export default async function NewWholesaleOrderPage({ params }: { params: { loca
                   <option value="">{locale === 'en' ? '— none —' : '— بدون —'}</option>
                   {products.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.name[locale]} ({p.wholesalePrice !== null ? p.wholesalePrice : p.retailPrice} AED)
+                      {p.name[locale]} ({p.price} AED)
                     </option>
                   ))}
                 </select>

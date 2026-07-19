@@ -33,7 +33,7 @@ export async function createWholesaleOrderAction(locale: string, formData: FormD
     if (!productId || quantity <= 0) continue;
     const product = await productRepository.getById(ctx, productId);
     if (!product) continue;
-    lineItems.push(buildLineItem(product, quantity, 'wholesale'));
+    lineItems.push(buildLineItem(product, quantity));
   }
   if (lineItems.length === 0) throw new Error('At least one line item is required');
 

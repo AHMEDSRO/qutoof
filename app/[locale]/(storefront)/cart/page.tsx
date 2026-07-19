@@ -5,7 +5,7 @@ import Link from 'next/link';
 import type { Locale } from '@/lib/i18n/config';
 import type { Product, PublicProduct } from '@/lib/types/product';
 import { useCart } from '@/lib/cart/cart-context';
-import { buildLineItem, calculateTotals, type AccountType } from '@/lib/pricing/pricing';
+import { buildLineItem, calculateTotals } from '@/lib/pricing/pricing';
 import { CartItemRow } from '@/components/cart/CartItemRow';
 import { CartSummary } from '@/components/cart/CartSummary';
 import { buttonVariants } from '@/components/ui/Button';
@@ -14,14 +14,7 @@ export default function CartPage({ params }: { params: { locale: Locale } }) {
   const { locale } = params;
   const { items } = useCart();
   const [products, setProducts] = useState<(Product | PublicProduct)[]>([]);
-  const [accountType, setAccountType] = useState<AccountType>('retail');
   const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    fetch('/api/session')
-      .then((r) => r.json())
-      .then((session) => setAccountType(session.role === 'wholesale_customer' ? 'wholesale' : 'retail'));
-  }, []);
 
   useEffect(() => {
     if (items.length === 0) {
@@ -40,7 +33,7 @@ export default function CartPage({ params }: { params: { locale: Locale } }) {
     .map((item) => {
       const product = products.find((p) => p.id === item.productId);
       if (!product) return null;
-      const lineItem = buildLineItem(product, item.quantity, accountType);
+      const lineItem = buildLineItem(product, item.quantity);
       return { product, quantity: item.quantity, lineItem };
     })
     .filter((l): l is NonNullable<typeof l> => l !== null);

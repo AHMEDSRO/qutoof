@@ -3,7 +3,6 @@ import type { Locale } from '@/lib/i18n/config';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { categoryRepository, productRepository } from '@/lib/data';
 import { getRequestContext } from '@/lib/auth/session';
-import { can } from '@/lib/rbac/permissions';
 import type { CategoryType } from '@/lib/types/category';
 import { CategoryNav } from './CategoryNav';
 import { Filters } from './Filters';
@@ -22,7 +21,6 @@ export async function CategoryListingPage({
 }) {
   const dict = await getDictionary(locale);
   const ctx = await getRequestContext();
-  const showWholesale = can(ctx.role, 'view_wholesale_pricing');
 
   const allCategories = await categoryRepository.list(ctx);
   const topCategory = allCategories.find((c) => c.type === type && c.parentId === null);
@@ -40,6 +38,7 @@ export async function CategoryListingPage({
     : [topCategory?.id, ...subcategories.map((c) => c.id)].filter(Boolean) as string[];
 
   const products = await productRepository.list(ctx, {
+    listingType: 'retail',
     countryOfOrigin: searchParams.country,
     minPrice: searchParams.minPrice ? Number(searchParams.minPrice) : undefined,
     maxPrice: searchParams.maxPrice ? Number(searchParams.maxPrice) : undefined,
@@ -62,7 +61,6 @@ export async function CategoryListingPage({
         <ProductGrid
           products={filtered}
           locale={locale}
-          showWholesale={showWholesale}
           emptyMessage={locale === 'en' ? 'No products match these filters.' : 'لا يوجد منتجات مطابقة.'}
         />
       </div>

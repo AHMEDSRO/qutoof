@@ -42,12 +42,12 @@ export interface MarginRow {
 export function marginByProduct(products: Product[], locale: 'en' | 'ar'): MarginRow[] {
   return products
     .map((p) => {
-      const margin = round2(p.retailPrice - p.costPrice);
+      const margin = round2(p.price - p.costPrice);
       return {
         productId: p.id,
         name: p.name[locale],
         margin,
-        marginPercent: p.retailPrice > 0 ? round2((margin / p.retailPrice) * 100) : 0,
+        marginPercent: p.price > 0 ? round2((margin / p.price) * 100) : 0,
       };
     })
     .sort((a, b) => b.marginPercent - a.marginPercent);

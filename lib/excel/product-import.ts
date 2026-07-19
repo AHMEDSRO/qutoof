@@ -10,8 +10,8 @@ export const IMPORT_COLUMNS = [
   'Country of Origin',
   'Size/Weight',
   'Unit',
-  'Retail Price',
-  'Wholesale Price',
+  'Listing Type',
+  'Price',
   'Quantity',
   'Image URL',
 ] as const;
@@ -23,8 +23,8 @@ const rowSchema = z.object({
   'Country of Origin': z.string().min(1, 'Country of Origin is required'),
   'Size/Weight': z.string().min(1, 'Size/Weight is required'),
   Unit: z.enum(['kg', 'g', 'piece', 'box', 'bunch'], { errorMap: () => ({ message: 'Unit must be kg, g, piece, box, or bunch' }) }),
-  'Retail Price': z.coerce.number().min(0, 'Retail Price must be >= 0'),
-  'Wholesale Price': z.union([z.coerce.number().min(0), z.literal('')]).optional(),
+  'Listing Type': z.enum(['retail', 'wholesale'], { errorMap: () => ({ message: 'Listing Type must be retail or wholesale' }) }),
+  Price: z.coerce.number().min(0, 'Price must be >= 0'),
   Quantity: z.coerce.number().min(0, 'Quantity must be >= 0'),
   'Image URL': z.string().url('Image URL must be a valid URL'),
 });
@@ -73,24 +73,20 @@ export function parseProductWorkbook(buffer: ArrayBuffer, categories: Category[]
       return;
     }
 
-    const wholesalePrice =
-      data['Wholesale Price'] === '' || data['Wholesale Price'] === undefined ? null : Number(data['Wholesale Price']);
-
     valid.push({
-      slug: slugify(data['Name (EN)']),
+      slug: slugify(`${data['Name (EN)']}-${data['Listing Type']}`),
       name: { en: data['Name (EN)'], ar: data['Name (AR)'] },
       description: { en: '', ar: '' },
       categoryId: category.id,
       countryOfOrigin: data['Country of Origin'].toUpperCase(),
       sizeWeight: data['Size/Weight'],
       unit: data.Unit,
+      listingType: data['Listing Type'],
       images: [{ url: data['Image URL'], altEn: data['Name (EN)'], altAr: data['Name (AR)'] }],
       costPrice: 0,
-      retailPrice: data['Retail Price'],
-      wholesalePrice,
+      price: data.Price,
       quantityInStock: data.Quantity,
       lowStockThreshold: 20,
-      isWholesaleAvailable: wholesalePrice !== null,
       isActive: true,
     });
   });
@@ -106,8 +102,8 @@ export function buildTemplateWorkbook(): XLSX.WorkBook {
     'Country of Origin': 'AE',
     'Size/Weight': '1kg',
     Unit: 'kg',
-    'Retail Price': 6,
-    'Wholesale Price': 4.5,
+    'Listing Type': 'retail',
+    Price: 6,
     Quantity: 100,
     'Image URL': 'https://placehold.co/600x400.png',
   };

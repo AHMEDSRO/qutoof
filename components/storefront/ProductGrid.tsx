@@ -5,12 +5,10 @@ import { ProductCard } from './ProductCard';
 export function ProductGrid({
   products,
   locale,
-  showWholesale,
   emptyMessage,
 }: {
   products: (Product | PublicProduct)[];
   locale: Locale;
-  showWholesale: boolean;
   emptyMessage: string;
 }) {
   if (products.length === 0) {
@@ -20,7 +18,7 @@ export function ProductGrid({
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
       {products.map((product) => (
-        <ProductCard key={product.id} product={product} locale={locale} showWholesale={showWholesale} />
+        <ProductCard key={product.id} product={product} locale={locale} />
       ))}
     </div>
   );

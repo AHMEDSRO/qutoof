@@ -4,18 +4,10 @@ import { calculateVat, round2, VAT_RATE } from './vat';
 
 export type AccountType = 'retail' | 'wholesale';
 
-type PriceableProduct = Pick<Product, 'id' | 'name' | 'wholesalePrice' | 'retailPrice'>;
+type PriceableProduct = Pick<Product, 'id' | 'name' | 'price'>;
 
-/** Resolves the unit price a given account type should pay for a product. */
-export function priceForAccountType(product: PriceableProduct, accountType: AccountType): number {
-  if (accountType === 'wholesale' && product.wholesalePrice !== null) {
-    return product.wholesalePrice;
-  }
-  return product.retailPrice;
-}
-
-export function buildLineItem(product: PriceableProduct, quantity: number, accountType: AccountType): OrderLineItem {
-  const unitPriceSnapshot = priceForAccountType(product, accountType);
+export function buildLineItem(product: PriceableProduct, quantity: number): OrderLineItem {
+  const unitPriceSnapshot = product.price;
   return {
     productId: product.id,
     nameSnapshot: product.name,

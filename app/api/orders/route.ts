@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     if (!product) {
       return NextResponse.json({ error: `Product not found: ${item.productId}` }, { status: 400 });
     }
-    lineItems.push(buildLineItem(product, item.quantity, accountType));
+    lineItems.push(buildLineItem(product, item.quantity));
   }
 
   const totals = calculateTotals(lineItems, region.deliveryFee);

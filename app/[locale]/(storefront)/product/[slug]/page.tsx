@@ -5,7 +5,6 @@ import { isLocale, type Locale } from '@/lib/i18n/config';
 import { getDictionary } from '@/lib/i18n/get-dictionary';
 import { productRepository, categoryRepository } from '@/lib/data';
 import { getRequestContext } from '@/lib/auth/session';
-import { can } from '@/lib/rbac/permissions';
 import { UNIT_LABELS } from '@/lib/i18n/units';
 import { COUNTRY_LABELS } from '@/lib/data/countries';
 import { buildMetadata } from '@/lib/seo/metadata';
@@ -38,7 +37,6 @@ export default async function ProductPage({ params }: Props) {
   const locale = params.locale as Locale;
   const dict = await getDictionary(locale);
   const ctx = await getRequestContext();
-  const showWholesale = can(ctx.role, 'view_wholesale_pricing');
 
   const product = await productRepository.getBySlug(ctx, params.slug);
   if (!product) notFound();
@@ -102,13 +100,7 @@ export default async function ProductPage({ params }: Props) {
           </dl>
 
           <div className="mt-6 rounded-card border border-tag-border bg-tag p-4">
-            <PriceTag
-              locale={locale}
-              retailPrice={product.retailPrice}
-              wholesalePrice={product.wholesalePrice}
-              unit={product.unit}
-              showWholesale={showWholesale}
-            />
+            <PriceTag locale={locale} price={product.price} unit={product.unit} />
           </div>
 
           <div className="mt-6">

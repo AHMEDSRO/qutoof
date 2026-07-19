@@ -62,7 +62,7 @@ export default function CheckoutPage({ params }: { params: { locale: Locale } })
   const lines = items
     .map((item) => {
       const product = products.find((p) => p.id === item.productId);
-      return product ? buildLineItem(product, item.quantity, accountType) : null;
+      return product ? buildLineItem(product, item.quantity) : null;
     })
     .filter((l): l is NonNullable<typeof l> => l !== null);
 

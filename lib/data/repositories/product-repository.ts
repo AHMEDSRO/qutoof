@@ -1,4 +1,4 @@
-import type { Product, PublicProduct } from '@/lib/types/product';
+import type { Product, PublicProduct, ListingType } from '@/lib/types/product';
 import type { RequestContext } from '@/lib/auth/auth-provider';
 
 export interface ProductFilters {
@@ -7,7 +7,9 @@ export interface ProductFilters {
   minPrice?: number;
   maxPrice?: number;
   search?: string;
-  wholesaleOnly?: boolean;
+  listingType?: ListingType;
+  /** Dashboard management views need to see hidden products too, to be able to unhide them. */
+  includeInactive?: boolean;
 }
 
 export interface ProductRepository {
@@ -16,6 +18,7 @@ export interface ProductRepository {
   getById(ctx: RequestContext, id: string): Promise<Product | PublicProduct | null>;
   create(ctx: RequestContext, input: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product>;
   update(ctx: RequestContext, id: string, patch: Partial<Product>): Promise<Product>;
+  delete(ctx: RequestContext, id: string): Promise<void>;
   bulkImport(ctx: RequestContext, items: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[]): Promise<Product[]>;
   adjustStock(ctx: RequestContext, id: string, quantityDelta: number): Promise<Product>;
 }
