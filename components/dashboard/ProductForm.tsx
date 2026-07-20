@@ -95,14 +95,28 @@ export function ProductForm({
         </p>
       </Field>
 
-      <Field label={locale === 'en' ? 'Image URL' : 'رابط الصورة'}>
-        <Input
-          name="imageUrl"
-          type="url"
-          required
-          placeholder="https://placehold.co/600x400.png"
-          defaultValue={defaultValues?.images[0]?.url}
+      <Field label={locale === 'en' ? 'Product photo' : 'صورة المنتج'}>
+        {defaultValues?.images[0]?.url && (
+          <div className="mb-2 flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element -- a plain preview of an already-uploaded image, not worth next/image's config here */}
+            <img
+              src={defaultValues.images[0].url}
+              alt=""
+              className="h-16 w-16 rounded-tag border border-border object-cover"
+            />
+            <p className="text-xs text-ink-muted">
+              {locale === 'en' ? 'Current photo — upload a new one to replace it.' : 'الصورة الحالية — ارفع صورة جديدة عشان تستبدلها.'}
+            </p>
+          </div>
+        )}
+        <input
+          name="image"
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif"
+          required={!defaultValues}
+          className="block w-full text-sm text-ink file:me-3 file:rounded-tag file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-semibold file:text-primary-foreground"
         />
+        {defaultValues && <input type="hidden" name="currentImageUrl" value={defaultValues.images[0]?.url ?? ''} />}
       </Field>
 
       <div className="grid grid-cols-2 gap-4">

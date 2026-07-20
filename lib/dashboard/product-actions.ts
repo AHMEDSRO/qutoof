@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { productRepository } from '@/lib/data';
 import { getRequestContext } from '@/lib/auth/session';
+import { uploadProductImage, deleteProductImageIfOwned } from '@/lib/supabase/storage';
 
 function slugify(value: string): string {
   return value
@@ -24,7 +25,6 @@ const productSchema = z.object({
   sizeWeight: z.string().min(1),
   unit: z.enum(['kg', 'g', 'piece', 'box', 'bunch']),
   listingType: z.enum(['retail', 'wholesale']),
-  imageUrl: z.string().url(),
   costPrice: z.coerce.number().min(0),
   price: z.coerce.number().min(0),
   quantityInStock: z.coerce.number().min(0),
@@ -36,8 +36,15 @@ export async function createProductAction(locale: string, formData: FormData) {
   const data = productSchema.parse(raw);
   const ctx = await getRequestContext();
 
+  const imageFile = formData.get('image');
+  if (!(imageFile instanceof File) || imageFile.size === 0) {
+    throw new Error('A product image is required');
+  }
+  const slug = slugify(`${data.nameEn}-${data.listingType}`);
+  const imageUrl = await uploadProductImage(imageFile, slug);
+
   await productRepository.create(ctx, {
-    slug: slugify(`${data.nameEn}-${data.listingType}`),
+    slug,
     name: { en: data.nameEn, ar: data.nameAr },
     description: { en: data.descriptionEn, ar: data.descriptionAr },
     categoryId: data.categoryId,
@@ -45,7 +52,7 @@ export async function createProductAction(locale: string, formData: FormData) {
     sizeWeight: data.sizeWeight,
     unit: data.unit,
     listingType: data.listingType,
-    images: [{ url: data.imageUrl, altEn: data.nameEn, altAr: data.nameAr }],
+    images: [{ url: imageUrl, altEn: data.nameEn, altAr: data.nameAr }],
     costPrice: data.costPrice,
     price: data.price,
     quantityInStock: data.quantityInStock,
@@ -62,6 +69,14 @@ export async function updateProductAction(locale: string, productId: string, for
   const data = productSchema.parse(raw);
   const ctx = await getRequestContext();
 
+  const currentImageUrl = String(formData.get('currentImageUrl') ?? '');
+  const imageFile = formData.get('image');
+  let imageUrl = currentImageUrl;
+  if (imageFile instanceof File && imageFile.size > 0) {
+    imageUrl = await uploadProductImage(imageFile, slugify(`${data.nameEn}-${data.listingType}`));
+    if (currentImageUrl) await deleteProductImageIfOwned(currentImageUrl);
+  }
+
   await productRepository.update(ctx, productId, {
     name: { en: data.nameEn, ar: data.nameAr },
     description: { en: data.descriptionEn, ar: data.descriptionAr },
@@ -70,7 +85,7 @@ export async function updateProductAction(locale: string, productId: string, for
     sizeWeight: data.sizeWeight,
     unit: data.unit,
     listingType: data.listingType,
-    images: [{ url: data.imageUrl, altEn: data.nameEn, altAr: data.nameAr }],
+    images: [{ url: imageUrl, altEn: data.nameEn, altAr: data.nameAr }],
     costPrice: data.costPrice,
     price: data.price,
     quantityInStock: data.quantityInStock,
@@ -83,7 +98,9 @@ export async function updateProductAction(locale: string, productId: string, for
 
 export async function deleteProductAction(locale: string, productId: string) {
   const ctx = await getRequestContext();
+  const product = await productRepository.getById(ctx, productId);
   await productRepository.delete(ctx, productId);
+  if (product?.images[0]?.url) await deleteProductImageIfOwned(product.images[0].url);
   revalidatePath(`/${locale}/dashboard/products`);
 }
 

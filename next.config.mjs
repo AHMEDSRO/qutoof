@@ -12,6 +12,14 @@ const nextConfig = {
   outputFileTracingIncludes: {
     '/api/orders/[id]/invoice': ['./public/fonts/**', './public/logo.jpg'],
   },
+  // Server Actions default to a 1MB request body — too small for a real product
+  // photo upload (product-actions.ts createProductAction/updateProductAction).
+  // Matches the 5MB limit set on the "product-images" Supabase Storage bucket.
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '5mb',
+    },
+  },
 };
 
 export default nextConfig;
